@@ -3,13 +3,14 @@ import { io } from "socket.io-client";
 
 const socket = io("https://coop-maze-server.onrender.com");
 
-const allRoles = ["a", "b", "c", "d", "e", "f"];
+const allRoles = ["a", "b", "c", "d", "e"];
 
 function App() {
   const [maze, setMaze] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [position, setPosition] = useState({ x: 1, y: 1 });
   const [yPosition, setYPosition] = useState(null);
+  const [gameClear, setGameClear] = useState(false);
 
   useEffect(() => {
     socket.on("init-maze", (mazeData) => {
@@ -22,7 +23,7 @@ function App() {
     });
 
     socket.on("game-clear", () => {
-      alert("🎉 모든 미로를 클리어했습니다! 수고했어요!");
+      setGameClear(true);
     });
 
     socket.on("role-assigned", (role) => {
@@ -69,6 +70,35 @@ function App() {
     );
   }
 
+  if (gameClear) {
+  return (
+    <div style={{ padding: "2rem", fontFamily: "Arial", textAlign: "center" }}>
+      <h1>🎉 축하합니다! 이제 빛을 볼 수 있어요!</h1>
+      {selectedRole === "a" && (
+        <button
+          onClick={() => {
+            socket.emit("restart-first-maze"); // ✅ 서버로 재시작 요청
+            setGameClear(false); // 화면 초기화
+          }}
+          style={{
+            marginTop: "1rem",
+            padding: "0.7rem 1.5rem",
+            fontSize: "1rem",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+          }}
+        >
+          첫 번째 미로로 돌아가기
+        </button>
+      )}
+    </div>
+  );
+}
+
+
+
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial", position: "relative" }}>
       <h1>🎮 협동 미로 탈출 게임</h1>
@@ -81,7 +111,6 @@ function App() {
           {selectedRole === "c" && <button onClick={() => handleMove("right")}>→ 오른쪽</button>}
           {selectedRole === "d" && <button onClick={() => handleMove("down")}>↓ 아래</button>}
           {selectedRole === "e" && <button onClick={() => handleMove("up")}>↑ 위</button>}
-          {selectedRole === "f" && <button onClick={() => handleMove("jump")}>⤴ 점프</button>}
         </div>
       ) : (
         <div>🗺️ 당신은 길을 안내하는 역할입니다.</div>
