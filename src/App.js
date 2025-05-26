@@ -132,11 +132,29 @@ function App() {
               const isExit = cell === 2;
 
               let bgColor = "white";
-              if (isWall) bgColor = "black";
-              else if (isExit) bgColor = "#0f0";
-              else if (isPlayerHere) bgColor = "red";
-              else if (isYHere) bgColor = "black";
-              else if (selectedRole !== "a") bgColor = "#eee";
+              let content = "";
+
+              if (selectedRole !== "a") {
+                // b~e는 출구만 초록, 나머진 회색
+                if (isExit) {
+                  bgColor = "#0f0"; // ✅ 출구 보임
+                  content = "✅";
+                } else {
+                  bgColor = "#eee"; // 나머지는 회색
+                }
+              } else {
+                // a는 모든 정보 표시
+                if (isWall) bgColor = "black";
+                else if (isExit) {
+                  bgColor = "#0f0";
+                  content = "✅";
+                } else if (isPlayerHere) {
+                  bgColor = "red";
+                } else if (isYHere) {
+                  bgColor = "black";
+                  content = "☠️";
+                }
+              }
 
               return (
                 <div
@@ -164,7 +182,7 @@ function App() {
         onClick={resetRole}
         style={{
           position: "absolute",
-          bottom: 20,
+          bottom: 25,
           left: 20,
           backgroundColor: "#eee",
           padding: "0.5rem",
