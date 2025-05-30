@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://coop-maze-server.onrender.com");
+const socket = io("https://server-ehld.onrender.com");
 
 //const socket = io("http://localhost:3001");
 
