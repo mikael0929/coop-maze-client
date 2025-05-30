@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://coop-maze-server.onrender.com");
+//const socket = io("https://coop-maze-server.onrender.com");
+
+const socket = io("http://localhost:3001");
 
 const allRoles = ["a", "b", "c", "d", "e"];
 
@@ -9,7 +11,7 @@ function App() {
   const [maze, setMaze] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [position, setPosition] = useState({ x: 1, y: 1 });
-  const [yPosition, setYPosition] = useState(null);
+  const [yPositions, setYPositions] = useState([]);
   const [gameClear, setGameClear] = useState(false);
 
   useEffect(() => {
@@ -19,7 +21,8 @@ function App() {
 
     socket.on("game-state", (state) => {
       setPosition(state.playerPosition);
-      setYPosition(state.yPosition);
+      setYPositions(state.yPositions || []);
+      setMaze(state.maze);
     });
 
     socket.on("game-clear", () => {
@@ -101,8 +104,8 @@ function App() {
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial", position: "relative" }}>
-      <h1>🎮 협동 미로 탈출 게임</h1>
-      <p><strong>내 역할:</strong> {selectedRole}</p>
+      <h1>빛을 찾아서</h1>
+      {/*<p><strong>내 역할:</strong> {selectedRole}</p>*/}
       <p><strong>현재 위치:</strong> x: {position.x}, y: {position.y}</p>
 
       {selectedRole !== "a" ? (
@@ -119,31 +122,45 @@ function App() {
       <div style={{ marginTop: "2rem" }}>
         <h3>🧱 미로</h3>
         <div
+          onClick={() => {
+            if (selectedRole === "b") handleMove("left");
+            else if (selectedRole === "c") handleMove("right");
+            else if (selectedRole === "d") handleMove("down");
+            else if (selectedRole === "e") handleMove("up");
+          }}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${maze[0]?.length || 0}, 30px)`,
+            cursor: ["b", "c", "d", "e"].includes(selectedRole) ? "pointer" : "default",
           }}
         >
           {maze.map((row, y) =>
             row.map((cell, x) => {
               const isPlayerHere = position.x === x && position.y === y;
-              const isYHere = yPosition && yPosition.x === x && yPosition.y === y;
+              const isYHere = yPositions.some((yPos) => yPos.x === x && yPos.y === y);
               const isWall = cell === 1;
-              const isExit = cell === 2;
+              const isExit = cell === 2 || cell === 3;
 
               let bgColor = "white";
+              let border = "1px solid #ccc";
               let content = "";
 
               if (selectedRole !== "a") {
-                // b~e는 출구만 초록, 나머진 회색
+                // b~e는 출구는 보이고, X와 Y는 표시되도록
                 if (isExit) {
-                  bgColor = "#0f0"; // ✅ 출구 보임
+                  bgColor = "#0f0";
                   content = "✅";
+                } else if (isPlayerHere) {
+                  bgColor = "red";
+                } else if (isYHere) {
+                  bgColor = "black";
+                  content = "☠️";
+                  border = "2px solid #f00";
                 } else {
-                  bgColor = "#eee"; // 나머지는 회색
+                  bgColor = "#eee";
                 }
               } else {
-                // a는 모든 정보 표시
+                // a는 전체 표시
                 if (isWall) bgColor = "black";
                 else if (isExit) {
                   bgColor = "#0f0";
@@ -153,6 +170,7 @@ function App() {
                 } else if (isYHere) {
                   bgColor = "black";
                   content = "☠️";
+                  border = "2px solid #f00";
                 }
               }
 
@@ -163,7 +181,7 @@ function App() {
                     width: "30px",
                     height: "30px",
                     backgroundColor: bgColor,
-                    border: "1px solid #ccc",
+                    border: border,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -181,12 +199,12 @@ function App() {
       <button
         onClick={resetRole}
         style={{
-          position: "absolute",
-          bottom: 25,
-          left: 20,
+          marginTop: "2rem",         // 미로 아래 여백
           backgroundColor: "#eee",
-          padding: "0.5rem",
+          padding: "0.5rem 1rem",
           borderRadius: "5px",
+          border: "1px solid #aaa",
+          fontSize: "1rem",
         }}
       >
         🔄 역할 초기화 하기 
