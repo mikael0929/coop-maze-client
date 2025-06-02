@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://server-yflm.onrender.com");
+//const socket = io("https://server-yflm.onrender.com");
 
-//const socket = io("http://localhost:3001");
+const socket = io("http://localhost:3001");
 
 const allRoles = ["a", "b", "c", "d", "e","admin"];
-const [mazeIndex, setMazeIndex] = useState(0);
+
 
 function App() {
   const [maze, setMaze] = useState([]);
@@ -14,8 +14,12 @@ function App() {
   const [position, setPosition] = useState({ x: 1, y: 1 });
   const [yPositions, setYPositions] = useState([]);
   const [gameClear, setGameClear] = useState(false);
+  const [mazeIndex, setMazeIndex] = useState(0);
 
   useEffect(() => {
+
+    window.focus(); // 포커스를 강제로 주는 코드
+
     socket.on("init-maze", (mazeData) => {
       setMaze(mazeData);
     });
@@ -49,6 +53,38 @@ function App() {
       socket.off("role-taken");
     };
   }, []);
+
+// 맵 테스트용 'a' 키보드 입력력
+  useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (selectedRole !== "a") return;
+
+    let direction = null;
+    switch (e.key) {
+      case "ArrowUp":
+        direction = "up";
+        break;
+      case "ArrowDown":
+        direction = "down";
+        break;
+      case "ArrowLeft":
+        direction = "left";
+        break;
+      case "ArrowRight":
+        direction = "right";
+        break;
+      default:
+        return;
+    }
+
+    socket.emit("move", { direction });
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+  }, [selectedRole]);
 
   const handleSelectRole = (role) => {
     socket.emit("join-as", role);
