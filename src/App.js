@@ -5,7 +5,8 @@ const socket = io("https://server-yflm.onrender.com");
 
 //const socket = io("http://localhost:3001");
 
-const allRoles = ["a", "b", "c", "d", "e"];
+const allRoles = ["a", "b", "c", "d", "e","admin"];
+const [mazeIndex, setMazeIndex] = useState(0);
 
 function App() {
   const [maze, setMaze] = useState([]);
@@ -23,6 +24,7 @@ function App() {
       setPosition(state.playerPosition);
       setYPositions(state.yPositions || []);
       setMaze(state.maze);
+      setMazeIndex(state.mazeIndex);  // ✅ 단계 상태 저장
     });
 
     socket.on("game-clear", () => {
@@ -36,6 +38,8 @@ function App() {
     socket.on("role-taken", (role) => {
       alert(`❌ 역할 ${role.toUpperCase()}는 이미 선택됐어요!`);
     });
+
+    
 
     return () => {
       socket.off("init-maze");
@@ -100,12 +104,49 @@ function App() {
   );
 }
 
+  if (selectedRole === "admin") {
+  return (
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+      <h1>🛠️ 관리자 패널</h1>
+      <p><strong>📍 현재 단계:</strong> {mazeIndex + 1}단계</p> {/* ✅ 현재 단계 표시 */}
 
+      <p>현재 미로 단계를 초기화하거나 원하는 단계로 이동하세요.</p>
+
+      <button onClick={() => socket.emit("admin-set-maze", 0)} style={{ margin: "1rem", padding: "0.5rem" }}>
+        🔄 1단계로 초기화
+      </button>
+
+      <div>
+        {Array.from({ length: 10 }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => socket.emit("admin-set-maze", i)}
+            style={{
+              margin: "0.3rem",
+              padding: "0.5rem",
+              backgroundColor: "#ddd",
+              borderRadius: "5px",
+              border: "1px solid #aaa",
+            }}
+          >
+            {i + 1}단계로 이동
+          </button>
+        ))}
+      </div>
+
+      <button onClick={resetRole} style={{ marginTop: "2rem" }}>
+        🔙 역할 초기화
+      </button>
+    </div>
+
+      );
+    }
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial", position: "relative" }}>
       <h1>빛을 찾아서</h1>
       {/*<p><strong>내 역할:</strong> {selectedRole}</p>*/}
+      <p><strong>현재 미로 단계:</strong> {mazeIndex + 1}단계</p>
       <p><strong>현재 위치:</strong> x: {position.x}, y: {position.y}</p>
 
       {selectedRole !== "a" ? (
